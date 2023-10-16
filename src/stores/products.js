@@ -1,0 +1,50 @@
+import { computed } from "vue";
+import { defineStore } from "pinia";
+import { useFirestore, useCollection } from 'vuefire'; //permite que mi app de vue se conecte con firestore
+import { collection, addDoc, where, query, limit, orderBy} from 'firebase/firestore';
+
+export const useProductsStore = defineStore('products', ()=> {
+
+    const db = useFirestore();
+
+
+    const category = [
+        {id: 1, name: 'Sudaderas'},
+        {id: 2, name: 'Tenis'},
+        {id: 3, name: 'Lentes'},
+    ]
+
+    const q = query(
+        collection(db, 'products'),
+        where('price', '>', 200)
+    )
+
+    const productsCollection = useCollection(q)
+
+    async function createProduct(product) {
+        await addDoc(collection(db, 'products'), product)
+    }
+
+    const categoryOptions = computed(() => {
+
+        const options = [
+            {label: '--Seleccione--', value: '', attrs: {disabled: true}},
+            ...category.map( category => (
+                {label: category.name, value:category.id}
+            ))
+        ]
+
+        return options
+    })
+
+    const noResults = computed(() => productsCollection.value.length === 0)
+
+    return {
+        createProduct,
+        productsCollection,
+        categoryOptions,
+        noResults
+        
+
+    }
+})
