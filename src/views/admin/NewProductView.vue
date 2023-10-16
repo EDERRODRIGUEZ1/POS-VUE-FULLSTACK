@@ -1,5 +1,8 @@
 <script setup>
     import Link from '@/components/Link.vue';
+    import useImage from '../../composables/useImage';
+
+    const { url, onFileChanse, isImageUploaded } = useImage();
 </script>
 
 <template>
@@ -15,6 +18,7 @@
                 <FormKit
                     type="form"
                     submit-label="Agregar Producto"
+                    incomplete-message="No se pudo enviar, revisa los mensajes"
                    
                  >   
                     <FormKit
@@ -33,7 +37,17 @@
                         validation="required"
                         :validation-messages="{required: 'La Imagen del Producto es Obligatoria'}"
                         accept=".jpg"
+                        @change="onFileChanse"
                     />
+
+                    <div v-if="isImageUploaded">
+                        <p class="font-black">Imagen Producto:</p>
+                        <img
+                            :src="url"
+                            alt="nueva imagen producto"
+                            class="w-32"
+                        />
+                    </div>
 
                     <FormKit
                         type="select"
