@@ -5,7 +5,7 @@
     import useImage from '../../composables/useImage';
     import { useProductsStore } from '@/stores/products'
 
-    const { url, onFileChanse, isImageUploaded } = useImage();
+    const { url, onFileChange, isImageUploaded } = useImage();
     const products = useProductsStore();
     const router = useRouter()
 
@@ -69,7 +69,7 @@
                         validation="required"
                         :validation-messages="{required: 'La Imagen del Producto es Obligatoria'}"
                         accept=".jpg"
-                        @change="onFileChanse"
+                        @change="onFileChange"
                         v-model.trim="formData.image"
                     />
 
