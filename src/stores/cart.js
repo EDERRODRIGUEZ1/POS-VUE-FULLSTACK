@@ -1,10 +1,15 @@
 import { ref, computed, watch, watchEffect } from 'vue'
 import { defineStore } from 'pinia';
+import { collection, addDoc} from 'firebase/firestore';
+import { useFirestore } from 'vuefire';
 import { useCouponStore } from './coupons';
+import { getCurrentDate } from '../helpers'
+import { data } from 'autoprefixer';
 
 export const useCartStore = defineStore('cart', () => {
 
     const coupon = useCouponStore()
+    const db = useFirestore()
     const items = ref([])
     const subtotal = ref(0)
     const taxes = ref(0) //state de impuesto
@@ -28,7 +33,7 @@ export const useCartStore = defineStore('cart', () => {
         //el cero es le valor inicial
         subtotal.value = items.value.reduce((total , item) => total + (item.quantity * item.price), 0)
         //calcular el impuesto
-        taxes.value = subtotal.value * TAX_RATE
+        taxes.value = Number((subtotal.value * TAX_RATE).toFixed(2))
         //total
         total.value = (subtotal.value + taxes.value) - coupon.discount
     })
@@ -55,6 +60,26 @@ export const useCartStore = defineStore('cart', () => {
         items.value = items.value.filter( item => item.id !== id)
     }
 
+    //VENTAS
+    async function checkout() {
+        try {
+            await addDoc(collection(db, 'sales'), {
+                
+                items: items.value.map( item => {
+                    const { availability, category, ...data } = item;
+                    return data
+                }),
+                subtotal: subtotal.value,
+                taxes: taxes.value,
+                discount: coupon.discount,
+                total: total.value,
+                date: getCurrentDate()
+            })
+        } catch (error) {
+            console.log(error);
+        }
+    }
+
     //se encarga de comprobar si el elemento ya existe en el carrito
     const isItemInCart = id => items.value.findIndex( item => item.id === id) //findIndex regresa la posicion del elemento del arreglo
     
@@ -76,6 +101,7 @@ export const useCartStore = defineStore('cart', () => {
         addItem,
         updateQuantity,
         removeItem,
+        checkout,
         isEmpty,
         checkProductAvailability,
        
