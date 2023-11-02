@@ -1,10 +1,10 @@
 import { ref, computed, watch, watchEffect } from 'vue'
 import { defineStore } from 'pinia';
-import { collection, addDoc} from 'firebase/firestore';
+import { collection, addDoc, runTransaction, doc } from 'firebase/firestore';
 import { useFirestore } from 'vuefire';
 import { useCouponStore } from './coupons';
 import { getCurrentDate } from '../helpers'
-import { data } from 'autoprefixer';
+
 
 export const useCartStore = defineStore('cart', () => {
 
@@ -75,9 +75,31 @@ export const useCartStore = defineStore('cart', () => {
                 total: total.value,
                 date: getCurrentDate()
             })
+            //Sustraer la cantidad de lo disponible
+            items.value.forEach( async (item) => {
+                const productRef = doc(db, 'products', item.id)
+                await runTransaction(db, async (transaction) => {
+                    const currentProduct = await transaction.get(productRef)
+                    const availability = currentProduct.data().availability - item.quantity
+                    transaction.update(productRef, { availability })
+
+                })
+            })
+
+            //Reiniciar el state
+            $reset()
+            coupon.$reset()
+
         } catch (error) {
             console.log(error);
         }
+    }
+
+    function $reset() {
+        items.value = []
+        subtotal.value = 0
+        taxes.value = 0
+        total.value = 0
     }
 
     //se encarga de comprobar si el elemento ya existe en el carrito

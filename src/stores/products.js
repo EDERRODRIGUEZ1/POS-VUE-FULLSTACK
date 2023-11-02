@@ -80,7 +80,9 @@ export const useProductsStore = defineStore('products', ()=> {
 
     //filtrar producto
     const filteredProducto = computed(()=> {
-        return productsCollection.value.filter( product => product.category === selectedCategory.value)
+        return productsCollection.value
+        .filter( product => product.category === selectedCategory.value)
+        .filter( product => product.availability > 0)
     })
 
     return {
